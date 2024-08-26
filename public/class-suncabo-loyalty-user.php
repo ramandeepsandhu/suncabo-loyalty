@@ -69,7 +69,7 @@ class Suncabo_Loyalty_User {
 		return sl_signin_form();
 	}
 
-	public function sl_validate_user(){
+	static function sl_validate_user(){
 		if (isset($_POST['sl_nonce']) || wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['sl_nonce'])),'sl_user_login' ) ){ 
 			$sl_email = sanitize_text_field($_POST['sl_email']);
 			$sl_password = sanitize_text_field($_POST['sl_password']);
@@ -126,7 +126,7 @@ class Suncabo_Loyalty_User {
 		return sl_signup_form();
 	}
 
-	public function sl_register_user(){ 
+	static function sl_register_user(){ 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-suncabo-loyalty-points.php';
 		$plugin_points = new Suncabo_Loyalty_Points();
 
@@ -387,7 +387,7 @@ class Suncabo_Loyalty_User {
 		}
 	}
 
-	public function sl_update_user(){
+	static function sl_update_user(){
 
 		if ( is_user_logged_in() ) {
 
@@ -441,7 +441,7 @@ class Suncabo_Loyalty_User {
 		return sl_forgot_password_form();
 	}
 
-	public function sl_verify_forgot_password(){
+	static function sl_verify_forgot_password(){
 
 		if(isset($_POST['sl_username_email']) || isset($_POST['sl_wpnonce']) || !empty($_POST['sl_username_email'])){
 
@@ -529,7 +529,7 @@ class Suncabo_Loyalty_User {
 		return sl_user_account();
 	}
 
-	public function sl_change_password(){
+	static function sl_change_password(){
 		if ( is_user_logged_in() ) {
 
 			if(isset($_POST['sl_nonce'])){
@@ -601,7 +601,8 @@ class Suncabo_Loyalty_User {
 		wp_die();
 	}
 
-	public function sl_email_preferences(){
+	static function sl_email_preferences(){
+		
 		$sl_resultdata = array('message' => '', 'result' => '');
 
 		if ( is_user_logged_in() ) {

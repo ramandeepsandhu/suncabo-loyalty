@@ -42,6 +42,4 @@ class Suncabo_Loyalty_i18n {
 
 	}
 
-
-
 }

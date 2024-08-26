@@ -5,7 +5,7 @@
 	if($users){
 		foreach($users as $user){
 			$firstName = get_user_meta($user->ID, 'first_name', true);
-    		$lastName = get_user_meta($user->ID, 'last_name', true);
+    	$lastName = get_user_meta($user->ID, 'last_name', true);
 			$users_records[$user->ID] = $firstName . ' ' . $lastName . ' - ' . $user->user_email;
 		}
 	}
@@ -17,6 +17,7 @@
       		$view = isset($_GET['view'])?$_GET['view']:'add';
 					$add_rewards = add_query_arg(['page' => 'sl-manage-points', 'view' => 'add'], admin_url('admin.php'));
 					$manage_rewards = add_query_arg(['page' => 'sl-manage-points', 'view' => 'list'], admin_url('admin.php'));
+					$coming_dob = add_query_arg(['page' => 'sl-manage-points', 'view' => 'dob'], admin_url('admin.php'));
 				?>
 
 				
@@ -30,6 +31,10 @@
 						  </li>
 						  <li class="nav-item">
 						  	<a href="<?php echo $manage_rewards;?>" class="nav-link <?php echo (in_array($view, array('list', 'delete')))?'active':'';?>">Manage Rewards</a>
+						  </li>
+
+						  <li class="nav-item">
+						  	<a href="<?php echo $coming_dob;?>" class="nav-link <?php echo (in_array($view, array('dob')))?'active':'';?>">Coming DOB</a>
 						  </li>
 						</ul>
 			
@@ -60,11 +65,37 @@
                   <div class="col-sm-10">
                     <?php
 										if($users){
-
 											echo '<select id="user-list" name="sl_selected_user" class="form-control select2-element" required>';
 											echo '<option value="">Select a user</option>';
 											foreach($users as $user){
-												echo '<option '. ((isset($loyalty_program) && $loyalty_program->user_id==$user->ID)?'selected="selected"':"").' value="'.$user->ID.'">'. $user->display_name . ' ('.$user->user_email.')' .'</option>';
+												echo '<option '. ( ((isset($loyalty_program) && $loyalty_program->user_id==$user->ID) || (isset($_GET['id'])))?'selected="selected"':"").' value="'.$user->ID.'">'. $user->display_name . ' ('.$user->user_email.')' .'</option>';
+											}
+											echo '</select>';
+										}
+									?>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                	<?php 
+                		$campaign_types = [
+		                		'account_signup' => 'Create Account',
+												'newsletter_signup' => 'Signup Newsletter',
+												'anniversary_signup' => 'Signup Anniversary',
+												'followup' => 'Follow',
+												'share' => 'Share',
+												'review' => 'Leave a Review',
+												'loyalty_points' => 'Loyalty Points',
+												'birthday_points' => 'Birthday Points'
+										];
+                	?>
+                  <label class="col-sm-2 col-form-label" for="basic-default-name">Campaign Type</label>
+                  <div class="col-sm-10">
+                    <?php
+										if($users){
+											echo '<select id="campaign_type" name="sl_campaign_type" class="form-control select2-element">';
+											echo '<option value="">Select a Campaign Type</option>';
+											foreach($campaign_types as $key=>$campaign_type){
+												echo '<option '. ( ((isset($loyalty_program) && $loyalty_program->campaign_type == $key) || (isset($_GET['campaign_types'])))?'selected="selected"':"").' value="'.$key.'">'. $campaign_type .'</option>';
 											}
 											echo '</select>';
 										}
@@ -102,8 +133,8 @@
                 <div class="row mb-3">
                   <label class="col-sm-2 col-form-label" for="points">Status</label>
                   <div class="col-sm-4">
-                  	<input type="radio" name="sl_status" class="" value="0" <?php echo ( isset($loyalty_program) && $loyalty_program->status==0)? "checked":"";?> >Pending
-                  	<input type="radio" name="sl_status" class="" value="1" <?php echo (isset($loyalty_program) && $loyalty_program->status==1)? "checked":"";?>>Approved
+                  	<input type="radio" name="sl_status" checked value="0" <?php echo ( isset($loyalty_program) && $loyalty_program->status==0)? "checked":"";?> >Pending
+                  	<input type="radio" name="sl_status" value="1" <?php echo (isset($loyalty_program) && $loyalty_program->status==1)? "checked":"";?>>Approved
                   </div>
                 </div>
                 
@@ -244,6 +275,96 @@
 					  </tbody>
 					</table>
           		<?php
+          	break;
+          	case 'dob':
+          	?>
+          	<?php wp_nonce_field('sl_send_birthday_email', 'sl_nonce' ); ?>
+          	<table class="table table-striped">
+					  <thead>
+					  	
+					    <tr>
+					    	<th scope="col"><input type="checkbox" class="checkAll" name="select-all"></th>
+					      <th scope="col">Name</th>
+					      <th scope="col">Email</th>
+					      <th scope="col">DOB</th>
+					      <th scope="col">Action</th>
+					    </tr>
+					  </thead>
+					  <tbody>
+					   <?php 
+					   	if($subscribers){
+					   		foreach($subscribers as $key => $subscriber){
+					   			?>
+						    <tr>
+						    	<td><input type="checkbox" name="loyalty-record" value="<?php echo $key;?>" class="cb-element"></td>
+						      <td><?php echo $subscriber['name'];?></td>
+						      <td><?php echo $subscriber['email'];?></td>
+						      <td><?php echo date('F d, Y', strtotime($subscriber['dob']));?></td>
+						      <td>
+						      	<div class="btn-group">
+								  <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								    Action
+								  </button>
+								  <?php
+
+								  $add_rewards = add_query_arg(['page' => 'sl-manage-points', 'view' => 'add', 'id' => $key, 'campaign_types' => 'birthday_points'], admin_url('admin.php'));
+
+								  $message = html_entity_decode(get_option('sl_birthdaywish_email_body'));
+								 	$message = str_replace('{first_name}', $subscriber['name'],  $message);
+								 	$message = str_replace('{dob}', date('F d, Y', strtotime($subscriber['dob'])),  $message);
+								 	//$message = str_replace('{loyalty_points}', $loyalty_points,  $message);
+
+
+								  ?>
+								  <div class="modal" tabindex="<?php echo $key?>" role="dialog" id="modal<?=$key;?>">
+									    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+									    <div class="modal-content">
+									      <div class="modal-header">
+									        <h5 class="modal-title">Happy Birthday Email</h5>
+									        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									          <span aria-hidden="true">&times;</span>
+									        </button>
+									      </div>
+									      <div class="modal-body">
+
+									        	<form method="get" action="" id="frm_user_<?php echo $key;?>"> 
+															<input type="hidden" name="user_id" value="<?php echo $key?>">
+														  	<div class="row">
+															    		<div class="form-group col-md-12">
+															      		<input type="text" class="form-control" value="<?php echo $subscriber['email'];?>" name="to" placeholder="To email address">
+															      	</div>
+															      	<div class="form-group col-md-12">
+															      		<input type="text" class="form-control" value="<?php echo get_option('sl_birthdaywish_subject');?>" name="subject" placeholder="Subject">
+															      	</div>
+															      	<div class="form-group col-md-12">
+															      		  <textarea class="form-control" name="content" rows="10" placeholder="Email content..."><?php echo $message;?></textarea>
+															      	</div>
+															   </div>
+														</form>
+
+
+									        
+									      </div>
+									      <div class="modal-footer">
+									      	<div id="sl_email_message_<?php echo $key;?>" class="text-left"></div>
+									        <button type="button" class="btn btn-primary send-birthday-email" data-id="<?php echo $key;?>">Send Email</button>
+									        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+									      </div>
+									    </div>
+									  </div>
+									</div>
+								  <div class="dropdown-menu dropdown-menu-right">
+								  	<a class="dropdown-item" data-toggle="modal" data-target="#modal<?=$key;?>" href="javascript:void(0);">Send Email</a>
+								  	<a class="dropdown-item" href="<?php echo $add_rewards;?>">Add Points</a>
+								  </div>
+								</div>
+						      </td>
+						    </tr>
+						<?php } }?>
+					   
+					  </tbody>
+					</table> 
+					<?php
           	break;
           }
           ?>

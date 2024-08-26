@@ -167,6 +167,8 @@ class Suncabo_Loyalty {
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'sl_admin_settings' );
 
 		$this->loader->add_action( 'wp_ajax_sl_bulk_action', $plugin_admin, 'sl_bulk_action' );
+		$this->loader->add_action( 'wp_ajax_sl_birthday_email', $plugin_admin, 'sl_birthday_email' );
+		
 		
 	} 
 

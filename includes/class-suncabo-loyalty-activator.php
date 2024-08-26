@@ -100,5 +100,4 @@ class Suncabo_Loyalty_Activator {
 			}
 		}
 	}
-
 }

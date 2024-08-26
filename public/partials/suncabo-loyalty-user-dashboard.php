@@ -2,7 +2,7 @@
 function sl_user_dashboard_form(){
 	$Suncabo_Loyalty_Points = new Suncabo_Loyalty_Points();
 	$tier_status = $Suncabo_Loyalty_Points->get_user_tier_status();
-	//ob_start();?>
+?>
 	<div class="dashbord-banner">
 		<div class="container">
 			<div class="dashboard-row">
@@ -242,7 +242,7 @@ function sl_user_dashboard_form(){
 			<?php 
 			global $wpdb;
 			$user_id = get_current_user_id();
-			$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = {$user_id} ORDER BY date_earned DESC" );
+			$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = %d ORDER BY date_earned DESC", $user_id );
 
 			$results = $wpdb->get_results($query);
 

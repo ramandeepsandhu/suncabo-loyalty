@@ -1,6 +1,4 @@
 <?php
-
-
 class Suncabo_Loyalty_Reward_Points{
 	
 	public $user_id ;
@@ -24,7 +22,7 @@ class Suncabo_Loyalty_Reward_Points{
     	}
     	if($user_subscription_type){
 	    	global $wpdb;
-			$post = $wpdb->get_row( $wpdb->prepare("SELECT * FROM $wpdb->posts WHERE post_title = '%s' AND post_type= '%s' ", $wpdb->esc_like( $user_subscription_type ) , 'subscription') );
+			$post = $wpdb->get_row( $wpdb->prepare("SELECT * FROM $wpdb->posts WHERE post_title = %s AND post_type= %s ", $wpdb->esc_like( $user_subscription_type ) , 'subscription') );
 	        if($post){
 	        	$current_subscription = get_fields($post->ID);
 				$current_subscription['id'] 		=  $post->ID ;
@@ -103,7 +101,7 @@ class Suncabo_Loyalty_Reward_Points{
     public function get_user_total_points(){
     	global $wpdb;		
     	$user_id = get_current_user_id();
-    	$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = {$user_id} AND point_type = 'reward' ORDER BY date_earned DESC LIMIT 1" );
+    	$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = %d AND point_type = 'reward' ORDER BY date_earned DESC LIMIT 1", $user_id );
 		$row = $wpdb->get_row( $query );
 		
 		if($row){
@@ -111,7 +109,4 @@ class Suncabo_Loyalty_Reward_Points{
 		}
 		return '0';
     }
-
-
 }
-?>

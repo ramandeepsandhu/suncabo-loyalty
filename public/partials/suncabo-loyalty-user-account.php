@@ -187,5 +187,4 @@ $tier_status = $Suncabo_Loyalty_Points->get_user_tier_status();
 	</div>
 </div>
 <div id="sl_user_loader"></div>
-
 <?php return ob_get_clean();} ?>

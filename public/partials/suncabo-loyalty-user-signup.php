@@ -236,5 +236,3 @@ function sl_signup_form(){
 	<?php
 	return ob_get_clean();
 }
-
-

@@ -156,22 +156,25 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 		if (isset($_POST['sl_add_points']) && wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['sl_add_points'])),'sl_add-points' ) ){ 
 
 			$sl_id 				= sanitize_text_field($_POST['sl_id']);
+			$campaign_type 		= sanitize_text_field($_POST['sl_campaign_type']);
 			$sl_selected_user 	= sanitize_text_field($_POST['sl_selected_user']);
    			$sl_portfolio_id 	= sanitize_text_field($_POST['sl_portfolio_id']);
    			$sl_portfolio_name 	= sanitize_text_field($_POST['sl_portfolio_name']);
    			$sl_loyalty_points 	= sanitize_text_field($_POST['sl_loyalty_points']);	
-   			$sl_loyalty_comment 	= sanitize_text_field($_POST['sl_loyalty_comment']);	
+   			$sl_loyalty_comment = sanitize_text_field($_POST['sl_loyalty_comment']);	
    			$sl_loyalty_status 	= sanitize_text_field($_POST['sl_status']);	
 
    			$loyalty_program = [
-   				'id'	=> $sl_id,
-   				'user_id' => $sl_selected_user,
-   				'folio_id' => $sl_portfolio_id,
-   				'folio_name' => $sl_portfolio_name,
-   				'points' => $sl_loyalty_points,
-   				'comment'	=> $sl_loyalty_comment,
-   				'status' => $sl_loyalty_status
+   				'id'			=> $sl_id,
+   				'campaign_type' => $campaign_type,
+   				'user_id' 		=> $sl_selected_user,
+   				'folio_id' 		=> $sl_portfolio_id,
+   				'folio_name' 	=> $sl_portfolio_name,
+   				'points' 		=> $sl_loyalty_points,
+   				'comment'		=> $sl_loyalty_comment,
+   				'status' 		=> $sl_loyalty_status
    			];
+
 
    			if($this->add_loyalty_points($loyalty_program)){
    				if($loyalty_program['id']){
@@ -197,14 +200,14 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
    				}
 
    			}
+   			echo'<script> window.location="?page=sl-manage-points&view=list"; </script> ';
 		}
-
-
 
 		$view = isset($_GET['view'])?$_GET['view']:'add';
 
 		switch($view){
 			case "add" :
+
 			break;
 			case "approve":
 				if($this->updateRecord($_GET['id'], 1)){
@@ -217,8 +220,11 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 					    'attributes'         => array( 'data-slug' => 'plugin-slug' )
 					  )
 					);
-					echo'<script> window.location="?page=sl-manage-points&view=list"; </script> ';
 				}
+				
+				//wp_redirect( admin_url( '?page=sl-manage-points&view=list' ) );
+        		//exit;
+				echo'<script> window.location="?page=sl-manage-points&view=list"; </script> ';
 			break;
 			case "pending":
 				if($this->updateRecord($_GET['id'], 0)){
@@ -231,8 +237,8 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 					    'attributes'         => array( 'data-slug' => 'plugin-slug' )
 					  )
 					);
-					echo'<script> window.location="?page=sl-manage-points&view=list"; </script> ';
 				}
+				echo'<script> window.location="?page=sl-manage-points&view=list"; </script> ';
 				
 			break;
 			case "edit" :
@@ -267,9 +273,32 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 				}
 				$loyalty_points = $this->list_loyalty_points_for_users();
 			break;
+			case "dob":
+				$subscribers = $this->comingDOBUserList();
+			break;
 		}
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/partials/suncabo-loyalty-manage-points.php';
 
+	}
+
+	public function comingDOBUserList(){
+		global $wpdb;
+		$start = date('m-d');
+		$end = date('m-d', strtotime('+31 days'));
+	    $sql = "SELECT {$wpdb->prefix}users.ID, {$wpdb->prefix}users.user_email,{$wpdb->prefix}usermeta.meta_value as dob, date_format(ifr_usermeta.meta_value, '%m-%d') as day_order  FROM {$wpdb->prefix}users INNER JOIN {$wpdb->prefix}usermeta ON ( {$wpdb->prefix}users.ID = {$wpdb->prefix}usermeta.user_id ) WHERE 1=1 AND ( ( ( {$wpdb->prefix}usermeta.meta_key = 'dob' AND date_format( {$wpdb->prefix}usermeta.meta_value , '%m-%d') BETWEEN '{$start}' AND '{$end}' ) ) ) ORDER BY day_order ASC ";
+
+		$users = $wpdb->get_results($sql);
+		$users_records =[];
+		foreach($users as $user){
+			$firstName = get_user_meta($user->ID, 'first_name', true);
+    		$lastName = get_user_meta($user->ID, 'last_name', true);
+			$users_records[$user->ID]['name'] = $firstName . ' ' . $lastName ;
+			$users_records[$user->ID]['email'] = $user->user_email;
+			$users_records[$user->ID]['dob'] = $user->dob;
+		}
+
+		
+		return $users_records;
 	}
 
 	public function sl_bulk_action(){
@@ -323,7 +352,9 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 			    array('id' => $loyalty_program->id)
 			);
 			$this->update_user_total_point($loyalty_program->user_id);
+			return true;
 		}
+
 	}
 
 	public function displayStatus($status){
@@ -368,7 +399,7 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 					$conditions = ' WHERE 1=1 AND (' . implode(' OR ', $condition['OR']) . ' )';
 			}
 		}
-		$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history " . $conditions . " ORDER BY date_earned DESC" );
+		$query =  "SELECT * FROM {$wpdb->prefix}rewards_history " . $conditions . " ORDER BY date_earned DESC" ;
 		$results = $wpdb->get_results($query);
 		if($results){
 			return $results;
@@ -397,6 +428,7 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 				    'comment' => $loyalty_program['comment'],
 				    'status' => $loyalty_program['status'],
 				    //'date_earned' => date('Y-m-d h:i:s'),
+				    'campaign_type' => isset($loyalty_program['campaign_type'])?$loyalty_program['campaign_type']:'',
 				    'point_type' => 'reward',
 				    ),
 			    array(
@@ -413,6 +445,7 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 			    'comment' => $loyalty_program['comment'],
 				'status' => $loyalty_program['status'],
 			    'date_earned' => date('Y-m-d h:i:s'),
+			    'campaign_type' => isset($loyalty_program['campaign_type'])?$loyalty_program['campaign_type']:'',
 			    'point_type' => 'reward',
 			    'created' => date('Y-m-d h:i:s'),
 			))){
@@ -430,7 +463,7 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 	public function update_user_total_point($user_id){
     	global $wpdb;		
 
-    	$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = {$user_id} ORDER BY date_earned ASC" );
+    	$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = %d ORDER BY date_earned ASC", $user_id );
 		$results = $wpdb->get_results($query);
 		$total = 0;
 		$previous_total = 0;
@@ -446,7 +479,7 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 				$total = $previous_total - $row->points; 
 			}
 			$previous_total = $total;
-			$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}rewards_history SET total='$total' WHERE id=$row->id"));
+			$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}rewards_history SET total='$total' WHERE id=%d", $row->id));
 		}
 
 		//check if need to update the tier
@@ -457,6 +490,36 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 
 	public function sl_admin_menu_page(){
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/partials/suncabo-loyalty-admin-menu.php';
+	}
+
+	public function sl_birthday_email(){
+		if (isset($_POST['sl_nonce']) && wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['sl_nonce'])),'sl_send_birthday_email' ) ){ 
+
+			parse_str($_POST['data'], $post);
+			$message = wp_kses_post($post['content']);
+
+			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-suncabo-loyalty-points.php';
+			$plugin_points = new Suncabo_Loyalty_Points();
+			$loyalty_program = $plugin_points->get_loyalty_program_by_campaign_type('birthday_points');
+			
+			if($loyalty_program){
+				$message = str_replace('{loyalty_points}', $loyalty_points['points'],  $message);
+			}
+			
+			$sl_wish_msg = 'Happy Birthday';
+			$headers[] = wp_kses_post('Content-Type: text/html; charset=UTF-8');
+			$headers[] = wp_kses_post("From: " . (get_option('sl_user_from_email') ? get_option('sl_user_from_email') : get_option('admin_email')) . " \r\n");
+			$subject = (get_option('sl_birthdaywish_subject') !== '' ? esc_html(get_option('sl_birthdaywish_subject')) : esc_html($sl_wish_msg));
+
+			$response['code'] = intval(200);
+			if(wp_mail($post['to'], $subject, $message, $headers)){			
+				$response['message'] = 'Email sent successfully.';
+			}else{
+				$response['message'] = 'Unexpected error occure. Please try again.';
+			}
+			echo wp_json_encode($response);
+			wp_die();
+		}
 	}
 
 	public function sl_admin_settings(){
@@ -485,12 +548,14 @@ class Suncabo_Loyalty_Admin extends Suncabo_Loyalty_Reward_Points{
 		register_setting( 'suncabo-loyalty', 'sl_userforgot_subject' );
 		register_setting( 'suncabo-loyalty', 'sl_userchange_subject' );
 		register_setting( 'suncabo-loyalty', 'sl_approvepoints_subject' );
+		register_setting( 'suncabo-loyalty', 'sl_birthdaywish_subject' );
 		
 		register_setting( 'suncabo-loyalty', 'sl_user_registration_email_body' );
 		register_setting( 'suncabo-loyalty', 'sl_user_registration_email_body_admin' );
 		register_setting( 'suncabo-loyalty', 'sl_user_forget_password_email_body' );
 		register_setting( 'suncabo-loyalty', 'sl_user_password_change_email_body' );
 		register_setting( 'suncabo-loyalty', 'sl_user_approve_points_email_body_admin' );
+		register_setting( 'suncabo-loyalty', 'sl_birthdaywish_email_body' );
 	}
 
 }

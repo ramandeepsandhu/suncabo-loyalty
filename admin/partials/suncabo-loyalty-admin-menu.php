@@ -1,4 +1,4 @@
-	<div class="wrap sl_a_admin">
+<div class="wrap sl_a_admin">
 		<h1><?php echo esc_html__('SunCabo Loyalty Program','suncabo-loyalty');?></h1>
 		<form method="post" action="options.php" class="admin-sl-settings">
 			<?php wp_nonce_field( 'sl-admin-settings', 'sl_admin_settings' ); ?>
@@ -138,7 +138,11 @@
 							</div>
 							<div class='sl_a_input'>
 								<label><?php echo esc_html__("Approve points email 'Subject'",'suncabo-loyalty');?> </label>
-								<input type="text" name="sl_approvepoints_subject" id="sl_approvepoints_subject" class="regular-text" value="<?php if(!empty(get_option('sl_userchange_subject'))) { echo esc_attr( get_option('sl_approvepoints_subject') ); } ?>">
+								<input type="text" name="sl_approvepoints_subject" id="sl_approvepoints_subject" class="regular-text" value="<?php if(!empty(get_option('sl_approvepoints_subject'))) { echo esc_attr( get_option('sl_approvepoints_subject') ); } ?>">
+							</div>
+							<div class='sl_a_input'>
+								<label><?php echo esc_html__("Birthday wish email 'Subject'",'suncabo-loyalty');?> </label>
+								<input type="text" name="sl_birthdaywish_subject" id="sl_birthdaywish_subject" class="regular-text" value="<?php if(!empty(get_option('sl_birthdaywish_subject'))) { echo esc_attr( get_option('sl_birthdaywish_subject') ); } ?>">
 							</div>
 						</div>
 					</div>
@@ -171,14 +175,23 @@
 						</div>
 
 						<hr>
-						<div><?php echo esc_html__("In the following fields, you can use these mail-tags : {user_name} {site_name} {user_email} {points} {loyalty_program} ", "suncabo-loyalty"); ?></div>
 
 						<div class='user-mail-body sl_a_col-6'>
+							<div><?php echo esc_html__("In the following fields, you can use these mail-tags : {user_name} {site_name} {user_email} {points} {loyalty_program} ", "suncabo-loyalty"); ?></div>
 							<h2><?php echo esc_html__('Approve points email body : Admin email','suncabo-loyalty');?></h2>
 							<div class='sl_a_input'>
 								<?php  wp_kses_post(wp_editor( html_entity_decode(get_option('sl_user_approve_points_email_body_admin')), 'sl_user_approve_points_email_body_admin', array('editor_height' => 300))); ?>
 							</div>
 						</div>
+						<div class='user-mail-body sl_a_col-6'>
+							<div><?php echo esc_html__("In the following fields, you can use these mail-tags : {first_name} {last_name} {site_name} {user_email} {dob} {loyalty_points} ", "suncabo-loyalty"); ?></div>
+							<h2><?php echo esc_html__('Happy Birthday Wish email body :','suncabo-loyalty');?></h2>
+							<div class='sl_a_input'>
+								<?php  wp_kses_post(wp_editor( html_entity_decode(get_option('sl_birthdaywish_email_body')), 'sl_birthdaywish_email_body', array('editor_height' => 300))); ?>
+							</div>
+						</div>
+
+
 
 					</div>
 				</div>

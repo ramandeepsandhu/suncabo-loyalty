@@ -34,5 +34,4 @@ function sl_forgot_password_form(){
 	</div>
 	<?php
 	return ob_get_clean();
-}
-?>
+}?>

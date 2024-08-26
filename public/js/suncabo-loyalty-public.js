@@ -533,7 +533,7 @@ jQuery(document).ready(function ($) {
 
     
 
-    jQuery("#sl_txt_dob").datepicker({changeMonth: true, changeYear: true, yearRange: '1900:+0', maxDate: new Date()});
+    jQuery("#sl_txt_dob").datepicker({dateFormat: 'yy-mm-dd' , changeMonth: true, changeYear: true, yearRange: '1900:+0', maxDate: new Date()});
 
 
     jQuery(".benefit, .point-awarded").click(function() {

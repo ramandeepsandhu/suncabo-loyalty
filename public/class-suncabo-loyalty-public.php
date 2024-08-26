@@ -320,9 +320,4 @@ class Suncabo_Loyalty_Public {
 			}
 		}
 	}
-
-	
-
-	
-
 }

@@ -79,6 +79,50 @@ jQuery(document).ready(function() {
 	        jQuery('.cb-element').prop('checked',false);
 	    }
 	});
+
+	
+	jQuery('.send-birthday-email').click(function(){
+		var btn = jQuery(this);
+		var user_id = jQuery(this).attr('data-id');
+		var sl_nonce = jQuery('#sl_nonce').val();
+		btn.prop('disabled', true);
+		var data = {
+            	action : "sl_birthday_email",
+            	data : jQuery('#frm_user_'+ user_id).serialize(),
+            	sl_nonce : sl_nonce
+            };
+			jQuery.ajax({
+                url: ajaxurl,
+                type:'POST',
+                dataType: 'json',
+                data: data,
+                beforeSend: function()
+                {
+                   jQuery("#sl_user_loader").fadeIn(500);
+                },
+                success: function(response){
+                	btn.prop('disabled', false);
+
+                	if(response.code == 200){
+                		html = '<div class="alert alert-success">' + response.message + '</div>';
+                	}else{
+                		html = '<div class="alert alert-danger">' + response.message + '</div>';
+                	}
+                	jQuery("#sl_email_message_"+user_id).html(html).show();
+                    
+                    /*setTimeout(function() { 
+                    	window.location = '?page=sl-manage-points&view=list';
+                	}, 2000);*/
+                    
+                },
+                complete:function(data)
+                {
+                    jQuery("#sl_user_loader").fadeOut(500);
+                }
+            });
+
+	});
+
 	jQuery('#loyalty-bulk-action').click(function(){
 		var selected = new Array();
 		jQuery("input:checkbox[name=loyalty-record]:checked").each(function() {

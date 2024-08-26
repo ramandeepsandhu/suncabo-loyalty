@@ -266,6 +266,7 @@ class Suncabo_Loyalty_Points extends Suncabo_Loyalty_Reward_Points{
 		    'total' => $loyalty_program['points'],
 		    'date_earned' => date('Y-m-d h:i:s'),
 		    'point_type' => 'reward',
+		    'campaign_type' => isset($loyalty_program['campaign_type'])?$loyalty_program['campaign_type']:'',
 		    'status' => 0,
 		    'created' => date('Y-m-d h:i:s'),
 		))){
@@ -281,7 +282,7 @@ class Suncabo_Loyalty_Points extends Suncabo_Loyalty_Reward_Points{
 		global $wpdb;
 		$table = $wpdb->prefix . 'rewards_history';
 		$user_id = get_current_user_id();
-		$query = $wpdb->prepare("SELECT * FROM $table WHERE user_id=%d AND folio_id=%d;", $user_id, $folio_id );
+		$query = $wpdb->prepare("SELECT * FROM $table WHERE user_id=%d AND folio_id=%d", $user_id, $folio_id );
 		$row = $wpdb->get_row( $query );
 		if(!$row){
 			return true;			
@@ -448,7 +449,7 @@ class Suncabo_Loyalty_Points extends Suncabo_Loyalty_Reward_Points{
     public function calculate_total_point(){
     	global $wpdb;		
     	$user_id = get_current_user_id();
-    	$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = {$user_id} ORDER BY date_earned ASC" );
+    	$query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}rewards_history WHERE status = 1 AND user_id = %d ORDER BY date_earned ASC",  $user_id);
 		$results = $wpdb->get_results($query);
 		$total = 0;
 		$previous_total = 0;
@@ -464,7 +465,7 @@ class Suncabo_Loyalty_Points extends Suncabo_Loyalty_Reward_Points{
 				$total = $previous_total - $row->points; 
 			}
 			$previous_total = $total;
-			$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}rewards_history SET total='$total' WHERE id=$row->id"));
+			$wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}rewards_history SET total='$total' WHERE id=%d", $row->id));
 		}
     }
 
